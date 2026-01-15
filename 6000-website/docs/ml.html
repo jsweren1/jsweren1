@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Josh Sweren">
+<meta name="author" content="Tori Edmunds">
+<meta name="author" content="Ahmad Cheema">
+<meta name="author" content="Idriss Moluh">
+
+<title>Beyond the Pitch: Perception vs.&nbsp;Performance - Machine Learning</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Beyond the Pitch: Perception vs.&nbsp;Performance</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./intro.html" rel="" target="">
+ <span class="menu-text">Intro</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./eda.html" rel="" target="">
+ <span class="menu-text">EDA</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./nlp.html" rel="" target="">
+ <span class="menu-text">NLP</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./ml.html" rel="" target="" aria-current="page">
+ <span class="menu-text">ML</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./summary.html" rel="" target="">
+ <span class="menu-text">SUMMARY</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools ms-auto">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#executive-summary" id="toc-executive-summary" class="nav-link active" data-scroll-target="#executive-summary"><span class="header-section-number">1</span> Executive Summary</a></li>
+  <li><a href="#analysis-report" id="toc-analysis-report" class="nav-link" data-scroll-target="#analysis-report"><span class="header-section-number">2</span> Analysis Report</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">2.1</span> Introduction</a></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">2.2</span> Data Preparation</a></li>
+  <li><a href="#model-development" id="toc-model-development" class="nav-link" data-scroll-target="#model-development"><span class="header-section-number">2.3</span> Model Development</a></li>
+  <li><a href="#results-and-evaluation" id="toc-results-and-evaluation" class="nav-link" data-scroll-target="#results-and-evaluation"><span class="header-section-number">2.4</span> Results and Evaluation</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">2.5</span> Conclusion</a></li>
+  </ul></li>
+  <li><a href="#ml-code-repository" id="toc-ml-code-repository" class="nav-link" data-scroll-target="#ml-code-repository"><span class="header-section-number">3</span> ML Code Repository</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Machine Learning</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Josh Sweren </p>
+             <p>Tori Edmunds </p>
+             <p>Ahmad Cheema </p>
+             <p>Idriss Moluh </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="executive-summary" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="executive-summary"><span class="header-section-number">1</span> Executive Summary</h2>
+<p>The application of Machine Learning (ML) in this project has provided insight into the relationship between fan sentiment on Reddit and actual match and player data from Euro 2024 and Copa America 2024. Our goal was to predict match outcomes, match states, and most recent match events using sentiment analysis and structured match data. By leveraging Spark ML, we successfully developed binary classification models that demonstrated strong predictive performance.</p>
+<p>One of the most impactful accomplishments of this analysis was the ability to predict match outcomes with a high degree of accuracy, based on both sentiment metrics from subreddit activity and real-time match data. This achievement underscores the potential for integrating NLP-driven insights with structured sports analytics to create predictive tools for event forecasting.</p>
+<p>The models not only showcased excellent performance but also revealed actionable insights, such as the influence of fan sentiment on match predictions and how specific player or team statistics correlate with game dynamics. These findings provide a framework for developing scalable and efficient predictive systems for sports analytics, empowering stakeholders to enhance fan engagement, optimize team strategies, and identify potential opportunities for sponsorships or partnerships.</p>
+</section>
+<section id="analysis-report" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="analysis-report"><span class="header-section-number">2</span> Analysis Report</h2>
+<section id="introduction" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">2.1</span> Introduction</h3>
+<p>The primary goal of this project was to bridge the gap between fan sentiment expressed on Reddit and the real-world dynamics of football matches during Euro 2024 and Copa America 2024. By leveraging Spark ML, we aimed to predict match outcomes, identify ongoing match states, and analyze the most recent match events using a combination of sentiment data and structured match statistics.</p>
+<p>The dataset consisted of three key components:</p>
+<ol type="1">
+<li><em>Reddit Comments</em>: Fan sentiment and engagement metrics were derived from subreddit activity related to participating teams in the tournaments, focusing on the knockout stages.<br>
+</li>
+<li><em>Match and Player Data</em>: Real-time match events, player statistics, and team performance data provided a robust basis for predictions.</li>
+<li><em>Reddit Submissions</em>: Submissions on the soccer subreddit to get relatively accurate timestamps for goals and match endings in order to determine the context surrounding each comment during a match.</li>
+</ol>
+<p>This approach allowed us to explore the interplay between online sentiment and actual match outcomes, providing a holistic perspective on how fan reactions correlate with team performance. Our initial ML objectives included building and evaluating binary classification models for the following tasks:</p>
+<ul>
+<li>How can machine learning techniques be used to predict match outcomes?</li>
+<li>To what extent can specific in-game contexts explain simultaneous online behavior?</li>
+<li>Is the predictive ability of machine learning models dependent on the identity of the commenters they seek to analyze?</li>
+</ul>
+<p>By addressing these goals, we sought to advance the field of sports analytics and demonstrate the predictive power of integrated sentiment and event data.</p>
+</section>
+<section id="data-preparation" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">2.2</span> Data Preparation</h3>
+<p>Since the binary classification tasks we will be carrying out will use the body of each relevant comment as the input, text preprocessing is a vital step to prepare these strings for analysis. To accomplish this, we used three PySpark preprocessing features. Firstly, <code>Tokenizer</code> was used to break down the text strings into smaller tokens. To isolate only important words that may have an effect on a comment’s meaning, we used <code>StopWordsRemover</code>. Finally, we used <code>HashingTF</code> and <code>IDF</code> to perform TF-IDF vectorization and change the data type such that it can be fed into a machine learning pipeline.</p>
+<p>Additionally, we considered the target variables, of which there were three. All of them needed to be cast to integers prior to training. The first test was to try to predict the <code>Match Won</code> column, essentially just whether the commenter’s team won the match during which they commented. The second was the <code>Status</code> column, attempting to predict whether the commenter’s team was winning or had won at the time of the comment. Thus, prior to training this model, any comments that occurred while the respective match was tied were removed. Finally, the final test involved the <code>Most Recent Event</code> column, attempting to predict whether the commenter’s team had either most recently scored or already won the match. Similarly, all comments that came before the match’s first goal were removed prior to training.</p>
+<p>The last step of data preparation was to split the comments dataframe into training and testing sets, which was done randomly using an 80%-20% split.</p>
+</section>
+<section id="model-development" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="model-development"><span class="header-section-number">2.3</span> Model Development</h3>
+<p>After data preparation, we used the PySpark <code>LogisticRegression</code> model to carry out all three of these binary classification tasks. This assigned probabilities to each record as raw predictions, which were then translated to binary predictions during evaluation using the <code>BinaryClassificationEvaluator</code> in PySpark. It was important to use the same model type and hyperparameters for all three tasks, as we will compare their performances after evaluating. The key metrics that were recorded to determine performance were precision, recall, and F1-score to obtain a thorough understanding of model performances.</p>
+</section>
+<section id="results-and-evaluation" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="results-and-evaluation"><span class="header-section-number">2.4</span> Results and Evaluation</h3>
+<p>The following three confusion matrices represent the performances of each of the three models when applied to the testing set of data. One observation that is readily apparent is the data imbalance, which was known from the start. As noted during exploratory data analysis, there is a higher volume of commenters from winning teams. The models clearly picked up on this, and were even more likely to assign a positive value to a comment, presumably reasoning that loss will be diminished when the mode value is selected. Nevertheless, positive values were not entirely selected, and these matrices show that all three tasks performed noticeably better than random selection would. In fact, in all three cases, true negatives outnumber false negatives, despite the exacerbated imbalance.</p>
+<div class="quarto-layout-panel">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="imgs/confusion_matrix1.png" class="img-fluid" width="800"></p>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="imgs/confusion_matrix2.png" class="img-fluid" width="800"></p>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="imgs/confusion_matrix3.png" class="img-fluid" width="800"></p>
+</div>
+</div>
+</div>
+<p>Below we can see the comparison of the three models in bar chart and tabular form. This provides a clear picture that machine learning tasks performed better when simply attempting to predict the match winner, rather than either iteration of trying to predict the context of a match at the time of a comment. Once again, all values exceeding 0.5 indicates that the models were able to learn valuable insights that are at least slightly predictive, but introducing more complexity to the data clearly did not help.</p>
+<p>One potential reason for this is that the time that one commenter sees a match event can differ greatly from when it actually happens or when it is first actualized in an r/soccer submission. Additionally, commenters may comment on the overall state of a match, rather than the immediate happenings at the time. For instance, if a team is outperforming its opponent but neither have scored yet, that team is more likely to win but commenters at the time will not be labelled as commenting during a positive moment in the match.</p>
+<p><img src="imgs/model_performance.png" class="img-fluid" width="800"></p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Match Result</strong></th>
+<th>Match Status</th>
+<th>Most Recent Event</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Precision</td>
+<td><strong>0.67</strong></td>
+<td>0.60</td>
+<td>0.57</td>
+</tr>
+<tr class="even">
+<td>Recall</td>
+<td><strong>0.87</strong></td>
+<td>0.62</td>
+<td>0.59</td>
+</tr>
+<tr class="odd">
+<td>F1 score</td>
+<td><strong>0.76</strong></td>
+<td>0.58</td>
+<td>0.55</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, the figure below analyzes where the best model (predicting the overall match result) succeeded and failed. Firstly, these bar charts are split by whether or not the commenter’s team won. As expected due to the single-elimination format, there are far fewer unique winners than losers. This juxtaposition illustrates the point made above, where the data imbalance leads to a scenario where the true positive rate far exceeds true negatives.</p>
+<p>By comparing performance by country, we can observe one interesting phenomenon. With match losers, the greatest accuracy is found in countries that did relatively well in the tournament, winning multiple games prior to being knocked out late. Each team can only lose once, so while countries can and do differ in quantity of comments, each of these reflects just one match. One possible explanation is that teams with greater expectations who have made it further in the tournament may be more likely to react negatively to a loss, thus making their result more predictable.</p>
+<p><img src="imgs/performance_by_result.png" class="img-fluid" width="800"></p>
+</section>
+<section id="conclusion" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">2.5</span> Conclusion</h3>
+<p>There are two main takeaways from the execution of machine learning techniques. The first is that our methods were relatively effective in using text data to train a Spark ML model and predict team performance. All three tasks performed better than a random selection, which can be considered a success due to the volatility and randomness of Reddit comments. The second is that providing additional context to explain what was happening at the time of a comment had a detrimental effect on model performance.</p>
+<p>Ultimately, this exercise shows that real-world sports outcomes are reflected in online discourse, although using just analytical methods may not be sufficient for confidently predicting them. Future tasks might see greater success if comments could be more accurately lined up to in-match events. Additionally, the reality that our dataset relies on self-identification of fandom and a very specific time frame may affect the style of comments, which might not fully reflect an entire corpus of discussion across Reddit.</p>
+</section>
+</section>
+<section id="ml-code-repository" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="ml-code-repository"><span class="header-section-number">3</span> ML Code Repository</h2>
+<p>Explore the code for our Machine Learning <a href="https://github.com/gu-dsan6000/fall-2024-project-team-20/tree/main/code/ml">here</a>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">Content 2024 by [Project Team 20] <br> All content licensed under a <a href="https://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International license (CC BY-NC 4.0)</a></div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">Made with and <a href="https://quarto.org/">Quarto</a><br> <a href="https://github.com/gu-dsan6000/fall-2024-project-team-20/tree/main">View the source at GitHub</a></div>
+  </div>
+</footer>
+
+
+
+</body></html>

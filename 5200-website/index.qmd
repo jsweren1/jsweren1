@@ -1,0 +1,1463 @@
+---
+title: 'America''s Pastime to a Global Game'
+subtitle: 'An Analysis of Major League Baseball''s Demographics over the Years'
+author: 'Josh Sweren, Ishaan Babbar, Idriss Moluh'
+format:
+  html:
+    page-layout: full
+    embed-resources: false
+    echo: true
+    warning: false
+    toc: true
+    code-fold: true
+    theme: [doc_style.scss]
+---
+
+## Introduction
+
+In December of 2023, superstar Japanese baseball player Shohei Ohtani signed a 10-year contract worth 700 million dollars with the Los Angeles Dodgers, obliterating the record for the largest contract in professional sports history by total value.[^1] This signing followed an historic stretch of winning American League MVP twice in the last three years, as well as winning MVP of the World Baseball Classic in March of 2023. The latter achievement was capped off by a stellar game-clinching pitching performance that was watched by an estimated 42.4% of Japanese households.[^2] But Ohtani is far from the only international star making headlines on the diamond. Just this coming fall, Dominican outfielder Juan Soto is expected by many to sign a contract worth roughly 500 million dollars.[^3]
+
+Highlighted by the monetary earnings of two of baseball's brightest stars, the historic and continued success of international baseball players is a hallmark of Major League Baseball (MLB) in the modern era. With significant portions of MLB rosters occupied by international players from all continents, as well as growing interest in international competitions, it is clear that baseball culture is one that is shared across many borders.
+
+However, this was not always the case. MLB has a notorious history of exclusion throughout the years, remaining a league for the select few for several decades. In addition to the long-standing color barrier, which has been well-documented, MLB has and continues to have different policies towards international players. To this day, international amateurs cannot enter the draft; they must be signed by an MLB team directly, often for small amounts as a teenager. Additionally, agreements between MLB and international leagues have hindered entry into the big leagues by incentivizing some players to remain in their home country. Nevertheless, the population of internationally-born MLB players has skyrocketed in recent decades. Thus, in this paper we will examine how a game known affectionately as America's Pastime reached a point of sustained pipelines of MLB talent from several countries, where two players can combine for contracts worth over $1 billion in a 12 month span.
+
+```{r}
+#| results = FALSE 
+
+library(reticulate)
+renv::init();
+reticulate::use_condaenv("dsan5200", conda = "/Users/joshsweren/anaconda3/condabin/conda")
+```
+
+## Where have Major League Baseball Players hailed from over the years?
+
+As we explore the landscape of MLB demographics over the years, a geographic overview of where MLB players have been born serves as a valuable introduction for our analysis. The choropleth below shows the proportion of total MLB players in a given year that were born in each country. This choropleth is visualized as a spherical globe to allow the user to interactively hone in on a specific part of the world, while ignoring the large swaths of the world without many MLB players, which often take up a great deal of space on two-dimensional maps. 
+
+By honing in on specific regions, there is valuable insight to be gathered. In the late 19th and early 20th centuries, focusing on Europe will show substantial representation from Ireland, Germany, and the United Kingdom. Meanwhile, more recent change can be seen in various parts of Latin America and East Asia, where many countries have sustained pipelines to the Major Leagues. Viewing the data in this way allows us to intuit that proximity to the U.S. can have an impact on a country's representation, but is certainly not the only factor.
+
+::: {.callout-tip}
+## How to Use
+
+* Drag the year slider in the bottom-left corner to adjust the year of analysis. To view a different region of the world, click on the globe and drag.
+
+* To view specific information about a country, hover over it with your cursor.
+
+*Note: Countries filled with gray have no players in the chosen year.*
+:::
+
+```{python}
+#| embed-resources: true
+import chart_studio.plotly as py
+import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime as dt
+# Get country data and create proportion values
+countries = pd.read_csv('../data/cleaned/countries.csv')
+countries['yearID'] = countries['yearID'].str[0:4]
+countries['yearID'] = pd.to_numeric(countries['yearID'])
+countries['pct'] = round(countries['freq'] * 100, 3)
+countries['logfreq'] = np.abs(np.log10(countries['freq']))
+# Color scale
+year = 1871
+scl = [[0, '#003c00'],[0.5, '#1e5519'],[1, '#386f30'],
+       [1.5, '#528a47'],[2, '#6ca660'],[2.5,'#87c379'],
+       [3, '#a3e194'],[3.5, '#bfffaf'],[4, '#ffffff']].append("_r")
+
+# Create data slider
+data_slider = []
+
+yearlist = sorted(countries['yearID'].unique())
+
+for year in yearlist:
+    filtered = countries[(countries['yearID']== year)]
+
+    for col in filtered.columns:
+        filtered[col] = filtered[col].astype(str)
+# Choropleth specifications
+    data_each_yr = dict(
+                        type='choropleth',
+                        locations = filtered['alpha3'],
+                        z=filtered['logfreq'],
+                        locationmode='ISO-3',
+                        colorscale = 'greens',
+                        colorbar= dict(title='Proportion of Players', 
+                                       tickvals = [4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5, 0], 
+                                       ticktext = ['0.0001','0.0005','0.001','0.005','0.01','0.05','0.1','0.5','1']),
+                        text="Country: "+filtered['birth_country']+"<br>Number of players: "+filtered['n']+"<br>Percentage of Yearly Players: "+filtered['pct']+"%",
+                        hovertemplate = "<b>%{text}</b><br>",
+                        hoverinfo = "name",
+                        name="",
+                        reversescale=True)
+
+    data_slider.append(data_each_yr)
+# Format choropleth and update by slider
+steps = []
+for i in range(len(data_slider)):
+    step = dict(method='restyle',
+                args=['visible', [False] * len(data_slider)],
+                label='{}'.format(i + 1871))
+    step['args'][1][i] = True
+    steps.append(step)
+
+sliders = [dict(active=151, pad={"t": 1}, steps=steps)]
+
+layout = dict(plot_bgcolor = "#fff4d5", paper_bgcolor = "#fff4d5",
+    title ={'text': 'Proportion of Players in Major League Baseball by Country', 'font': dict(
+                    family="Droid Sans Mono, monospace",
+                    size=15,
+                    color="#003c00"
+               )},
+              geo=dict(scope='world',
+                       projection={'type': 'orthographic'},
+                       showland=True,
+                       showcountries=True,
+                       showlakes=True,
+                       showocean=True,
+                       oceancolor='#cceeff',
+                       lakecolor='#cceeff',
+                       landcolor='#dddddd',
+                       bgcolor = '#fff4d5'),
+              sliders=sliders,
+              width = 800,
+              height = 800,
+              font=dict(
+                    family="Droid Sans Mono, monospace",
+                    size=12,
+                    color="#003c00"
+               ))
+
+fig = go.Figure(data=data_slider, layout=layout)
+fig.show()
+```
+
+
+## How and why have demographics changed throughout MLB's history?
+
+After establishing that a country's representation of MLB players is both highly regional and has evolved greatly over time, we can dive deeper into the specific trends over the last century-and-a-half, and why they might have occurred. The following linked plot shows the top 10 countries in total players played in MLB (excluding the U.S.), and a time series showing the history of their involvement.
+
+Firstly, the general increase over the last several decades is impossible to miss. Highlighted by the Dominican Republic, Venezuela, and Puerto Rico (which competes as a separate entity from the U.S. in international competitions[^4]), we can see that a large portion of this is from Hispanic countries. By hovering over the points on the graph, we can see that while baseball has a long history in all three of these countries, the advent of MLB academies for youth development have correlated greatly with this rise.
+
+Other interesting results from this plot is the rise, then fall, then re-rise of Cuban-born players. The dip in numbers appears to line up with the well-documented strife between the American and Cuban governments, showing that non-baseball related politics have consequences on the field. Additionally, the sudden rise in Japanese players in the last couple decades ignores the storied history of baseball in Japan, since only recently did MLB reach an agreement with the Japanese professional league (NPB) to create a straight-forward path for players to switch leagues.[^5] [^6] [^7] [^8] [^9] [^10] [^11] [^12] [^13] [^14] [^15] [^16] [^17] [^18]
+
+::: {.callout-tip}
+## How to Use
+
+* Click on a bar in the graph on top to filter the time series graph and single out a particular country.
+
+* Be sure to hover over the points on the graph to see important milestones in a country's baseball history.
+:::
+
+```{python}
+#| embed-resources: true
+# Get top 10 country data
+import altair as at
+df = pd.read_csv('../data/cleaned/t10_countries.csv')
+df = df.rename(columns={'birth_country': 'Birth Country', 'yearID': 'Year', 'freq': 'Proportion of Total Players', 'Total': 'Total Unique Players'})
+df['Proportion of Total Players'] = round(df['Proportion of Total Players'], 5)
+
+df1 = df.drop_duplicates(subset=['Birth Country'])
+
+# Create milestone tooltips
+df2 = pd.DataFrame(columns=['Birth Country', 'x_val', 'y_val', 'Milestone'])
+df2 = df2.append({'Birth Country': 'Dominican Republic', 'x_val': dt.datetime.strptime('12-31-1987', '%m-%d-%Y'), 'y_val': .04309,
+                  'Milestone': "1987: The Los Angeles Dodgers open the first MLB academy in the Dominican Republic."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Dominican Republic', 'x_val': dt.datetime.strptime('12-31-1920', '%m-%d-%Y'), 'y_val': 0,
+                  'Milestone': "1916-24: Baseball takes off in the Dominican Republic due to heightened American intervention."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Dominican Republic', 'x_val': dt.datetime.strptime('12-31-1956', '%m-%d-%Y'), 'y_val': .001626,
+                  'Milestone': "1956: Osvaldo Virgil becomes the first Dominican-born MLB player."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Dominican Republic', 'x_val': dt.datetime.strptime('12-31-2003', '%m-%d-%Y'), 'y_val': .107063,
+                  'Milestone': "2003: All 30 MLB teams have a baseball academy in the Dominican Republic."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Venezuela', 'x_val': dt.datetime.strptime('12-31-1945', '%m-%d-%Y'), 'y_val': .001727,
+                  'Milestone': "1945: The Venezuelan Professional Baseball League is established as the nation's primary league."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Venezuela', 'x_val': dt.datetime.strptime('12-31-1988', '%m-%d-%Y'), 'y_val': .021345,
+                  'Milestone': "1988: The Houston Astros open the first MLB academy in Venezuela."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Venezuela', 'x_val': dt.datetime.strptime('12-31-2002', '%m-%d-%Y'), 'y_val': .046805,
+                  'Milestone': "2002: 21 out of 30 MLB teams maintain a baseball academy in Venezuela."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Venezuela', 'x_val': dt.datetime.strptime('12-31-2016', '%m-%d-%Y'), 'y_val': .074967,
+                  'Milestone': "2016: Only 4 MLB teams maintain academies in Venezuela, dropping from 21 in 2002."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Puerto Rico', 'x_val': dt.datetime.strptime('12-31-1941', '%m-%d-%Y'), 'y_val': .001855,
+                  'Milestone': "1941: Puerto Rico's first professional baseball league is established. Meanwhile, Hiram Bithorn becomes the first Puerto Rican-born MLB player."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Puerto Rico', 'x_val': dt.datetime.strptime('12-31-1990', '%m-%d-%Y'), 'y_val': .039595,
+                  'Milestone': "1990: Puerto Rican-born baseball players are made eligible for the MLB draft."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Puerto Rico', 'x_val': dt.datetime.strptime('12-31-1955', '%m-%d-%Y'), 'y_val': .009662,
+                  'Milestone': "1955: Roberto Clemente makes his MLB debut. He will become the first Hispanic player to reach 3,000 hits and the first Puerto Rican-born Hall-of-Famer."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Canada', 'x_val': dt.datetime.strptime('12-31-1871', '%m-%d-%Y'), 'y_val': .008696,
+                  'Milestone': "1856: The first recorded Canadian baseball game is played. The sport begins to expand in the country throughought the 19th century."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Canada', 'x_val': dt.datetime.strptime('12-31-1913', '%m-%d-%Y'), 'y_val': .008816,
+                  'Milestone': "1913: 24 minor league baseball teams play in Canada, the maximum amount in history."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Canada', 'x_val': dt.datetime.strptime('12-31-1969', '%m-%d-%Y'), 'y_val': .008705,
+                  'Milestone': "1969: The Montreal Expos become the first Canadian-based MLB team. They are later joined by the Toronto Blue Jays in 1977."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Cuba', 'x_val': dt.datetime.strptime('12-31-1949', '%m-%d-%Y'), 'y_val': .017361,
+                  'Milestone': "1949: The Alacranes del Almendares of Cuba win the first ever Caribbean Series, an annual club tournament that has continued to present day."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Cuba', 'x_val': dt.datetime.strptime('12-31-1961', '%m-%d-%Y'), 'y_val': .030263,
+                  'Milestone': "1961: The U.S. severs diplomatic ties with Cuba following the Cuban revolution, kickstarting decades of tension between the two countries amid the Cold War."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Cuba', 'x_val': dt.datetime.strptime('12-31-2009', '%m-%d-%Y'), 'y_val': .0118,
+                  'Milestone': "2009: The U.S. and Cuban governments begin to lift travel restrictions between the two countries."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Cuba', 'x_val': dt.datetime.strptime('12-31-1878', '%m-%d-%Y'), 'y_val': .007,
+                  'Milestone': "1878: The first Cuban professional baseball league is established. Throughout the late 19th and early 20th centuries, Cuban teams regularly compete with and beat MLB teams in exhibition games."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Japan', 'x_val': dt.datetime.strptime('12-31-2006', '%m-%d-%Y'), 'y_val': .012283,
+                  'Milestone': "2006: Japan wins the first ever World Baseball Classic, a quadrennial tournament designed to bring the baseball world together."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Japan', 'x_val': dt.datetime.strptime('12-31-1967', '%m-%d-%Y'), 'y_val': .0013,
+                  'Milestone': "1967: An agreement between MLB and the Japanese Professional league (NPB) is enacted, placing strict regulations on Japanese players' ability to leave their club for an MLB team."}, ignore_index=True)
+df2 = df2.append({'Birth Country': 'Japan', 'x_val': dt.datetime.strptime('12-31-1998', '%m-%d-%Y'), 'y_val': .007698,
+                  'Milestone': "1998: The 1967 agreement is amended with an agreement known as the \"posting system\", creating a mechanism for Japanese baseball players to leave for MLB for a fee, opening the door for many more Japanese MLB players."}, ignore_index=True)
+
+# Color palette
+country_domain = ["Dominican Republic", "Venezuela", "Puerto Rico", "Canada", "Cuba", "Mexico", "Japan", "Panama", "Ireland", "United Kingdom", "USA"]
+country_range = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#b15928']
+
+at.data_transformers.enable('default', max_rows = None);
+
+selection = at.selection_point(fields=['Birth Country'])
+bar_color = at.condition(selection, at.Color('Birth Country:N').scale(domain=country_domain, range=country_range), at.value('lightgray'))
+# Bar chart with linking parameter
+bar=(at.Chart(df1, title = at.TitleParams(text = 'Top 10 Countries in Unique Players (Excluding USA)', fontSize=14, font = 'Droid Sans Mono, monospace'))).mark_bar().encode(x='Total Unique Players:Q',
+           y=at.Y('Birth Country:N',
+           sort=at.EncodingSortField(field='Total Unique Players', 
+                              order='descending')),
+            color=bar_color,
+            tooltip=['Total Unique Players:Q']
+     ).add_params(selection
+  ).properties(
+      width=550,
+      height=150
+  )
+# Line plot
+line = at.Chart(df).mark_line().encode(
+    x='Year:T',
+    y='Proportion of Total Players:Q',
+    color=at.Color('Birth Country:N').scale(domain=country_domain, range=country_range),
+    tooltip=['year(Year):T','Birth Country:N','Proportion of Total Players:Q']
+).transform_filter(selection).properties(
+    width=550,
+    height=300
+)
+# Add milestones
+point = at.Chart(df2).mark_circle(size=100, opacity=1).encode(
+    x='x_val:T',
+    y='y_val:Q',
+    color='Birth Country:N',
+    tooltip=['Milestone:N']
+).transform_filter(selection)
+
+line.encoding.x.scale = at.Scale(domain=['1871', '2022'])
+point.encoding.x.title = 'Year'
+point.encoding.y.title = 'Proportion of Yearly MLB Players'
+at.vconcat(bar, (line + point)).resolve_scale(color='independent').configure(background='#fff4d5').configure_axis(
+    labelFontSize=12,
+    titleFontSize=16
+).configure_legend(titleFontSize=16)
+```
+
+The plot above offers great insight into which countries dominate the international MLB player base, and when that rise occurred. However, we can also see countries which have fallen since the early years of MLB, often due to a diminishing proportion of immigrants in the U.S. from those countries. The race-plot below will document the cumulative number of unique MLB players from every country, showing how the top-10 most represented nations have changed over time.
+
+::: {.callout-tip}
+## How to Use
+
+* Click play to begin the animation and pause to stop it. Drag the slider to manually see the state of cumulative players in a given year.
+
+* Be sure to wait until the end to see rapid movement from several of today's most prominent sources of MLB talent.
+:::
+
+```{python}
+# Get cumulative values for race plot
+c_intl = pd.read_csv('../data/cleaned/cum_sums.csv')
+c_intl['csum'] = c_intl['csum'].round()
+c_intl = c_intl[c_intl['yearID'].notna()]
+c_intl['yearID'] = pd.to_numeric(c_intl['yearID'], downcast='integer')
+
+# Specify colors
+from raceplotly.plots import barplot
+c_intl = c_intl[c_intl['birth_country']!='USA']
+colors = {'Dominican Republic':'#a6cee3',
+          'Venezuela':'#1f78b4',
+          'Puerto Rico':'#b2df8a',
+          'Canada':'#33a02c',
+          'Cuba':'#fb9a99',
+          'Mexico':'#e31a1c',
+          'Japan':'#fdbf6f',
+          'Panama':'#ff7f00',
+          'Ireland':'#cab2d6',
+          'United Kingdom':'#6a3d9a'}
+# create race plot
+raceplot = barplot(c_intl,
+                      item_column='birth_country',
+                      value_column='csum',
+                      time_column='yearID',
+                      item_color=colors,
+                      top_entries=10)
+
+raceplot.plot(title = 'Top 10 Countries in Cumulative Players (Excluding USA)',
+                 item_label = 'Birth Country',
+                 value_label = 'Cumulative MLB Players',
+                 frame_duration = 200);
+raceplot.fig.update_layout(paper_bgcolor='#fff4d5',plot_bgcolor = "#fff4d5",
+    font=dict(
+        family="Droid Sans Mono, monospace"
+    ))
+```
+
+Now that we have a good idea of how and when international players entered Major League Baseball, below is a table that snapshots the most recent year of the dataset: 2022. Here we can see every country that has been represented, along with the new players that entered the league in 2022 and the current cumulative total. This is a good depiction of where new players are coming from, and which countries are seeing a current increase in representation.
+
+```{python}
+# Get table for visualization
+table = c_intl[c_intl['yearID']==2022]
+table = table.sort_values(['csum'], ascending=[False])
+table = table[['birth_country', 'n.y', 'csum']]
+table = table.rename(columns={'birth_country':'Birth Country','n.y':'New Players This Year','csum':'Cumulative Players'})
+# Format table
+fig = go.Figure(data=[go.Table(
+    header=dict(values=list(table.columns),
+                fill_color='#6ca660',
+                align='left',
+                font = dict(family='Droid Sans Mono, monospace')),
+    cells=dict(values=[table['Birth Country'], table['New Players This Year'], table['Cumulative Players']],
+               fill_color='#a3e194',
+               align='left',
+               font = dict(family='Droid Sans Mono, monospace')))
+])
+# Format
+fig.update_layout(
+     title_text = "The State of International MLB Players in 2022",
+     plot_bgcolor='#fff4d5',
+     paper_bgcolor='#fff4d5',
+     font = dict(family='Droid Sans Mono, monospace')
+);
+fig.show()
+```
+
+## What are the demographic constructions of MLB teams?
+
+As we know, a player entering the league cannot happen without a team making a decision. Every player signed means a team is to some degree entrusting that person with their organization's success. Therefore, it is valuable to look at which teams have had the most international players across history. Below is a linked plot showing the locations of every MLB team in a given year, with the markings sized by the proportion of players on that team that were not born in the U.S. A large bubble means that a greater proportion of players on that team are international.
+
+Additionally, the right side shows the specific breakdown of each country of origin in the user's selection. The main takeaway from this visualization is that the rise of international players in MLB is largely a collective trend. In every year, there is certainly variation between the teams, but as we look at 2022 and other recent years, every team has a substantially larger proportion than the smallest proportions from previous decades.
+
+::: {.callout-tip}
+## How to Use
+
+* Drag the year slider in the bottom-left corner to adjust the year of analysis.
+
+* To see the specific nationality breakdown of a team in a given year, click on the circle corresponding with its stadium location.
+:::
+
+```{python}
+#| embed-resources: true
+
+# Get team dataset with information by country
+teams = pd.read_csv('../data/cleaned/stats.csv')
+teams1 = teams.drop_duplicates(subset=['birth_country','yearID','teamID'])
+teams1 = teams1.rename(columns={'yearID':'Year','name':'Team Name','team_country':'Number of Players','birth_country':'Birth Country','country_pct':'Proportion'})
+teams2 = teams1.loc[teams1['Birth Country'] == 'USA']
+teams2['Proportion'] = 1 - teams2['Proportion']
+teams2['Proportion'] = round(teams2['Proportion'], 5)
+
+# Get state map data
+from vega_datasets import data
+states = at.topo_feature(data.us_10m.url, feature='states')
+# create slider
+slider = at.binding_range(
+    step=1, min=1871, max=2022, name='Year')
+selection = at.selection_point(fields=['Team Name'])
+point_color = at.condition(selection, at.value('#6ca660'), at.value('#ff8000'))
+select_year = at.selection_point(
+    name="slider", 
+    fields=['Year'],
+    bind=slider,
+    value=2022 
+)
+# Set background as US map
+background = at.Chart(states).mark_geoshape(
+    fill='lightgray',
+    stroke='white'
+).project('albersUsa').properties(
+    width=350,
+    height=250
+)
+# Plot points
+points = at.Chart(teams2, title = at.TitleParams(text = 'Proportion of International Players by Team', fontSize=14, font = 'Droid Sans Mono, monospace')).mark_circle().encode(
+    longitude='park_lon:Q',
+    latitude='park_lat:Q',
+    size='Proportion:Q',
+    tooltip=['Team Name:N','Proportion:Q'],
+    color=point_color
+).project(
+    "albersUsa"
+).properties(
+    width=350,
+    height=250
+).add_params(
+    select_year
+).add_params(
+    selection
+).transform_filter(
+    select_year
+)
+# Bar chart
+bar = at.Chart(teams1, title = at.TitleParams(text = 'Breakdown of Players by Country of Birth', fontSize=14, font = 'Droid Sans Mono, monospace')).mark_bar().encode(
+    x=at.X('Birth Country:N').sort('-y'),
+    y='sum(Number of Players)',
+    tooltip=['Birth Country:N','sum(Number of Players):Q'],
+    color=at.value('#6ca660')
+).properties(
+    width=250,
+    height=200
+).transform_filter(
+    select_year
+).transform_filter(
+    selection
+)
+
+((background + points | bar).configure(background='#fff4d5')).configure_axis(
+    labelFontSize=12,
+    titleFontSize=16
+).configure_legend(titleFontSize=16, titleFont='Droid Sans Mono, monospace')
+```
+
+## How does player position interact with demographic trends?
+
+Another area of interest to understand more on is to see the relationship between player position and demographic trends as it helps us further explore demographic in the MLB. This visualization uses the top 10 countries in cumulative MLB players to see how player positions  have evolved over the years. These plots address the hypothesis that player demographics are dependent on position.
+
+To test this hypothesis, we used a calculated field created for the proportion of MLB players from each country. This will show trends over time on how each country specializes in certain positions. The proportion of players is between 0 to 1, 1 meaning 100 percent of all players from that country in the MLB that year played a given position, and 0 meaning zero percent of players from that country were represented in that position. In our results below in the first graph, we can see that for pitchers the percentage of Dominican Republic players has increased over the years, from 1991 only 21 percent of players were pitchers compared to 2022 where almost 40 percent of players from the Dominican Republic, reflecting a two-fold increase over the years. This finding gives an important insight on player development and acquisition, as it shows that the singular line showing an increase in Dominican players does not tell the full story. To a large extent, Dominican pitchers came after Dominican "position players".
+
+::: {.callout-tip}
+## How to Use
+
+* Click on one of the tabs to focus on a different position.
+
+* To see one specific nationality, use the filter in the top-left corner.
+:::
+
+```{r}
+#| echo: true
+#| vscode: {languageId: r}
+library(readr)
+suppressPackageStartupMessages({
+  library(plotly)
+  library(ggplot2)
+  library(dplyr)
+})
+options(warn = -1)
+appearances <- read.csv('../data/core/Appearances.csv')
+teams <- read.csv('../data/core/Teams.csv')
+parks <- read.csv('../data/core/Parks.csv')
+people <- read.csv('../data/core/People.csv')
+home <- read.csv('../data/core/HomeGames.csv')
+field <- read.csv("../data/core/Fielding.csv")
+
+
+appearances$birth_city <- people$birthCity[match(appearances$playerID, people$playerID)]
+appearances$birth_state <- people$birthState[match(appearances$playerID, people$playerID)]
+appearances$birth_country <- people$birthCountry[match(appearances$playerID, people$playerID)]
+appearances$park <- home$park.key[match(appearances$teamID, home$team.key)]
+appearances$park_city <- parks$city[match(appearances$park, parks$park.key)]
+appearances$park_state <- parks$state[match(appearances$park, parks$park.key)]
+appearances$park_country <- parks$country[match(appearances$park, parks$park.key)]
+
+# Merge appaereance data with field data 
+merge_data <- merge(appearances, field, by = "playerID", all.x=TRUE)
+#merge_data <- subset(merge_data, select = -c(yearID.y, teamID.y, lgID.y, round, G, GS.y, InnOuts, PO, A, E, DP, TP, PB, SB, CS))
+
+suppressMessages({
+countries <- merge_data %>%
+  group_by(yearID.x, birth_country, POS) %>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))
+})
+#countries$yearID.x <- lubridate::ymd(countries$yearID.x, truncated = 2L)
+countries<- na.omit(countries)
+countries <- countries[countries$birth_country %in% c("CAN", "Cuba", "D.R.", "Ireland", "Japan", "Mexico", "Panama", "P.R.", "United Kingdom", "Venezuela"), ]
+countries <- na.omit(countries)
+# Change country names                           
+countries$birth_country <- ifelse(countries$birth_country == "CAN", "Canada",
+                                   ifelse(countries$birth_country == "D.R.", "Dominican Republic",
+                                          ifelse(countries$birth_country == "P.R.", "Puerto Rico",
+                                                 countries$birth_country)))
+```
+
+::: {.panel-tabset}
+
+## Pitcher
+
+```{r}
+#| echo: true
+ 
+countries_p <- countries[countries$POS == "P", ]
+countries_p <- na.omit(countries_p)
+
+max_freq <- max(countries_p$freq)
+min_freq<- min(countries_p$freq)
+countries_p$norm_freq <- (countries_p$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_p, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are Pitchers", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of Pitchers by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+## Catcher
+
+```{r}
+#| echo: true
+countries_c <- countries[countries$POS == "C", ]
+countries_c <- na.omit(countries_c)
+
+max_freq <- max(countries_c$freq)
+min_freq<- min(countries_c$freq)
+countries_c$norm_freq <- (countries_c$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_c, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are Catchers", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of Catchers by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+## First Base
+
+```{r}
+#| echo: true
+countries_1b <- countries[countries$POS == "1B", ]
+countries_1b <- na.omit(countries_1b)
+
+max_freq <- max(countries_1b$freq)
+min_freq<- min(countries_1b$freq)
+countries_1b$norm_freq <- (countries_1b$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_1b, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are First Basemen", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of First Basemen by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+## Second Base
+
+```{r}
+#| echo: true
+countries_2b <- countries[countries$POS == "2B", ]
+countries_2b <- na.omit(countries_2b)
+
+max_freq <- max(countries_2b$freq)
+min_freq<- min(countries_2b$freq)
+countries_2b$norm_freq <- (countries_2b$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_2b, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are Second Basemen", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of Second Basemen by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+## Third Base
+
+```{r}
+#| echo: true
+countries_3b <- countries[countries$POS == "3B", ]
+countries_3b <- na.omit(countries_3b)
+
+max_freq <- max(countries_3b$freq)
+min_freq<- min(countries_3b$freq)
+countries_3b$norm_freq <- (countries_3b$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_3b, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are Third Basemen", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of Third Basemen by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+## Shortstop
+
+```{r}
+#| echo: true
+countries_ss <- countries[countries$POS == "SS", ]
+countries_ss <- na.omit(countries_ss)
+
+max_freq <- max(countries_ss$freq)
+min_freq<- min(countries_ss$freq)
+countries_ss$norm_freq <- (countries_ss$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_ss, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are Shortstops", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of Shortstops by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+## Outfield
+
+```{r}
+#| echo: true
+countries_of <- countries[countries$POS == "OF", ]
+countries_of <- na.omit(countries_of)
+
+max_freq <- max(countries_of$freq)
+min_freq<- min(countries_of$freq)
+countries_of$norm_freq <- (countries_of$freq - min_freq) / (max_freq - min_freq)
+
+plot_ly(data = countries_of, x = ~yearID.x, y = ~norm_freq, color = ~birth_country,
+        type = "scatter", mode = "markers", text = ~POS,
+        marker = list(size = 10, opacity = 0.8), 
+        colors = c("#33a02c", "#fb9a99", "#a6cee3", "#cab2d6", "#fdbf6f", "#e31a1c", "#ff7f00", "#b2df8a", "#6a3d9a", "#1f78b4")) %>%
+  layout(title = list(text = "Proportion of Players that are Outfielders", x = 0.95),
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Proportion of Outfielders by Nationality"),
+         hovermode = "closest",
+         font = list(family = "Droid Sans Mono, monospace"),
+         plot_bgcolor = '#fff4d5',
+         paper_bgcolor = '#fff4d5',
+         legend=list(title=list(text='<b> Birth Country </b>'))) %>% 
+  layout(
+    updatemenus = list(
+      list(
+        buttons = list(
+          list(method = "restyle",
+               args = list("visible", list(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "All"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Cuba"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Dominican Republic"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Ireland"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+               label = "Puerto Rico"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Japan"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Mexico"),
+          list(method = "restyle",
+               args = list("visible", list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Canada"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Panama"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+               label = "United Kingdom"),
+          list(method = "restyle",
+               args = list("visible", list(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+               label = "Venezuela")
+        ),
+        direction = "down",
+        x = 0.0,
+        xanchor =  "left", 
+        y = 1.1,
+        yanchor = "top"
+      )
+    )
+  )
+```
+
+:::
+
+As a supplement to the plots above, we can take a look at an *innovative view* of the proportion of international players at each position over time. As the color of the baseball at each position on the field gets darker, that represents a greater proportion of players not born in the U.S. Additionally, the right side shows the specific nationality breakdown of a given selection.
+
+A takeaway from this visualization is that as international players became more prominent, it appears that infield positions such as shortstop and second base have led that charge. In 2022, shortstop remains the only position where greater than 50% of the players are international. Meanwhile, the pitcher position has consistently one of the lowest proportions throughout the 21st century, indicating that international pitchers are acquired at a lower rate than other positions.
+
+*Note: Positional data on outfielders was not tracked as specifically in earlier years, hence the missing data until 1954.*
+
+::: {.callout-tip}
+## How to Use
+
+* Drag the year slider in the bottom-left corner to adjust the year of analysis.
+
+* To see the specific nationality breakdown of a position in a given year, click on the circle corresponding with its location on the field.
+:::
+
+```{python}
+# Get position data and manipulate
+pos = pd.read_csv('../data/cleaned/positions.csv')
+pos = pos[pos['yearID'].notna()]
+pos = pos.rename(columns={'POS.x': 'Position','birth_country': 'Birth Country','pos_pct': 'Proportion',
+                          'position_total_country': 'Total Players', 'yearID':'Year'})
+pos = pos[pos['Position'].notna()]
+pos1 = pos.drop_duplicates(subset=['Birth Country','Year','Position'])
+pos1 = pos1.loc[pos1['Birth Country'] == 'USA']
+pos1['Proportion'] = 1 - pos1['Proportion']
+pos1['Proportion'] = round(pos1['Proportion'], 5)
+pos1 = pos1[pos1['x_field'].notna()]
+pos1 = pos1[pos1['y_field'].notna()]
+# Add baseballs as image
+pos1['img'] = '../img/baseball.png'
+pos2 = pos.drop_duplicates(subset=['Birth Country','Year','Position'])
+
+# Create color scale
+domain = [0,.06,.12,.18,.24,.3,.36,.42,.48]
+range = ['#ffffff','#ffcc7d','#f8be6c','#f0b05b','#e9a14a','#e2933a','#db842a','#d37518','#cc6600']
+# Slider
+slider = at.binding_range(
+    step=1, min=1871, max=2022, name='Year')
+selection = at.selection_point(fields=['Position'])
+source1 = pd.DataFrame.from_records([
+      {"x": 0.5, "y": 0.5, "img": "../img/field.png"}
+])
+select_year = at.selection_point(
+    name="slider", 
+    fields=['Year'],
+    bind=slider,
+    value=2022 
+)
+# Place field image as background
+field = at.Chart(source1, title = at.TitleParams(text = ['Proportion of International Players', 'by Position on the Field'], fontSize=14, font = 'Droid Sans Mono, monospace')).mark_image(
+    width=300,
+    height=300
+).encode(
+    x='x',
+    y='y',
+    url='img'
+)
+# Plot positions as baseballs with dot overlay
+position = at.Chart(pos1).mark_image(width=40, height=40).encode(
+    x=at.X('x_field:Q', axis=at.Axis(tickSize=0)).scale(domain=(0, 1)),
+    y=at.Y('y_field:Q', axis=at.Axis(tickSize=0)).scale(domain=(0, 1)),
+    tooltip=['Position:N','Proportion:Q'],
+    url='img'
+).properties(
+    width=300,
+    height=300
+).add_params(
+    select_year
+).transform_filter(
+    select_year
+)
+points = at.Chart(pos1).mark_circle(opacity=.8).encode(
+    x='x_field:Q',
+    y='y_field:Q',
+    tooltip=['Position:N','Proportion:Q'],
+    size=at.value(1500),
+    color=at.condition(selection, at.Color('Proportion:Q').scale(domain=domain, range=range), at.value('#bbbbbb'))
+).transform_filter(
+    select_year
+).add_params(
+    selection
+)
+# Bar chart
+bar = at.Chart(pos2, title = at.TitleParams(text = 'Breakdown of Players by Country of Birth', fontSize=14, font = 'Droid Sans Mono, monospace')).mark_bar().encode(
+    x=at.X('Birth Country:N').sort('-y'),
+    y='sum(Total Players):Q',
+    tooltip=['Birth Country:N','sum(Total Players):Q'],
+    color=at.value('#db842a')
+).properties(
+    width=300,
+    height=300
+).transform_filter(
+    select_year
+).transform_filter(
+    selection
+)
+field.encoding.x.title = ''
+field.encoding.y.title = ''
+at.hconcat((field + position + points), bar).configure_axis(grid=False).configure_view(strokeWidth=0).configure(background='#fff4d5').configure_axis(
+    labelFontSize=12,
+    titleFontSize=16
+).configure_legend(titleFontSize=16, titleFont='Droid Sans Mono, monospace')
+```
+
+## How is performance on the field impacted by players' origins?
+
+Now that we have a good grasp of where players have hailed from, it's time to take a look at what MLB teams really care about: player performance. Ultimately, the greatest driver in international participation in MLB is each team's desire to out-pace their opposition by tapping into all possible player-bases. However, players that come from foreign leagues are often met with skepticism regarding their ability to adapt to the highest level of baseball in the world. Therefore, this section will evaluate how player performance is affected by their birth location.
+
+The following linked plot shows two statistics. Firstly, "on-base percentage plus slugging percentage (OPS)" is a hitting statistic that is generally the most common composite value for measuring a batters performance while hitting. In summation, it weighs both a hitter's ability to get on base, as well as their ability to get big hits (e.g., home runs are weighed more than doubles). This value was calculated manually based on raw values in the data, and a weighted average based on at-bats (the amount of times a player made an appearance) was created for each country and year. Meanwhile on the y-axis, "earned run average (ERA)" measures a pitcher's ability to not allow runs to score for the other team. This value was also aggregated into a weighted average based on the amount of innings a pitcher pitched.
+
+Combining these statistics in a two-dimensional plot allows us to see whether or not certain countries excel more greatly in hitting or pitching, as well as compare them to the league average, which is shown in a large black dot for every given year. These values were filtered to only include countries where the total number of at-bats exceeds 200 and the total number of innings pitched exceeds 100, just to avoid prohibitively small sample sizes. Additionally, users can select each country to see a distribution of players for each statistic, with the league average marked in orange.
+
+An interesting takeaway from these plots is that the league average appears to generally rise as the years go on for both statistics, which indicates improving offensive performance and diminishing pitching performance. Meanwhile, there is little to gain from the individual countries, as they seem to vary greatly based on year. What this does tell us is that there is not necessarily a trend of international players playing better or worse than the league average.
+
+::: {.callout-tip}
+## How to Use
+
+* Drag the year slider in the bottom-left corner to adjust the year of analysis.
+
+* To see distributions of a country's batting and pitching performance measured against the league average in a given year, click on a dot in the scatter plot.
+
+**Note: Higher OPS and lower ERA are better.**
+:::
+
+```{python}
+#| execute: false
+
+# Get stats by country
+players = pd.read_csv('../data/cleaned/country_stats.csv')
+players.loc[players['countryAB'] < 200, ['countryOPS','countryERA']] = np.nan
+players.loc[players['countryIP'] < 100, ['countryOPS','countryERA']] = np.nan
+players['yearID'] = players['yearID'].astype('Int64')
+players = players.rename(columns={'yearID':'Year','birth_country':'Birth Country','countryOPS':'Weighted Average OPS',
+                                  'countryERA':'Weighted Average ERA','lgOPS':'League Average OPS','lgERA':'League Average ERA'})
+# Round for neatness
+players['Weighted Average OPS'] = round(players['Weighted Average OPS'], 5)
+players['Weighted Average ERA'] = round(players['Weighted Average ERA'], 5)
+players['League Average OPS'] = round(players['League Average OPS'], 5)
+players['League Average ERA'] = round(players['League Average ERA'], 5)
+# Get hitting stats
+bat = pd.read_csv('../data/cleaned/bat.csv')
+bat.loc[bat['AB'] < 100, ['OPS']] = np.nan
+bat['yearID'] = bat['yearID'].astype('Int64')
+bat = bat.rename(columns={'yearID':'Year','birth_country':'Birth Country'})
+# Get pitching stats
+pitch = pd.read_csv('../data/cleaned/pitch.csv')
+pitch.loc[pitch['IPouts'] < 100, ['ERA']] = np.nan
+pitch['yearID'] = pitch['yearID'].astype('Int64')
+pitch = pitch.rename(columns={'yearID':'Year','birth_country':'Birth Country'})
+# Create slider
+import plotly.express as px
+select_year = at.selection_point(
+    name="slider", 
+    fields=['Year'],
+    bind=slider,
+    value=2022 
+)
+selection = at.selection_point(fields=['Birth Country'])
+
+# Scatter plot with averages
+scatter = at.Chart(players, title = at.TitleParams(text = 'Average OPS and ERA for each Country (minimum 100 IP and 200 AB)', fontSize=14, font = 'Droid Sans Mono, monospace')).mark_circle(size=80, opacity=0.7).encode(
+    x=at.X('Weighted Average OPS:Q').scale(domain=(0.25, 1)),
+    y=at.Y('Weighted Average ERA:Q').scale(domain=(2, 7)),
+    color=at.condition(selection, at.Color('Birth Country:N').scale(domain=country_domain, range=country_range), at.value('#cccccc')),
+    tooltip=['Birth Country', 'Weighted Average OPS', 'Weighted Average ERA']
+).properties(
+    width=500,
+    height=300
+).transform_filter(
+    select_year
+).add_params(
+    select_year
+).add_params(
+    selection
+)
+avg = at.Chart(players).mark_circle(size=100).encode(
+    x=at.X('League Average OPS:Q').scale(domain=(0.25, 1)),
+    y=at.Y('League Average ERA:Q').scale(domain=(2, 7)),
+    color=at.value('#000000'),
+    tooltip=['Year', 'League Average OPS', 'League Average ERA']
+).transform_filter(
+    select_year
+).add_params(
+    select_year
+)
+# Create distribution plots
+dist1 = at.Chart(bat).mark_area().encode(
+    x="OPS:Q",
+    y='density:Q',
+    color=at.value('#6ca660')
+).properties(
+    width=500,
+    height=100
+).add_params(
+    selection
+).transform_filter(
+    selection
+).add_params(
+    select_year
+).transform_filter(
+    select_year
+).transform_density(
+    'OPS',
+    as_=['OPS', 'density']
+)
+dist2 = at.Chart(pitch).mark_area().encode(
+    x="ERA:Q",
+    y='density:Q',
+    color=at.value('#6ca660')
+).properties(
+    width=500,
+    height=100
+).add_params(
+    selection
+).transform_filter(
+    selection
+).add_params(
+    select_year
+).transform_filter(
+    select_year
+).transform_density(
+    'ERA',
+    as_=['ERA', 'density']
+)
+ops_avg = at.Chart(players).mark_rule(color='orange', size=2).encode(
+    x='mean(League Average OPS)',
+    tooltip=['mean(League Average OPS)']
+).add_params(
+    selection
+).transform_filter(
+    selection
+).add_params(
+    select_year
+).transform_filter(
+    select_year
+)
+era_avg = at.Chart(players).mark_rule(color='orange', size=2).encode(
+    x='mean(League Average ERA)',
+    tooltip=['mean(League Average ERA)']
+).add_params(
+    selection
+).transform_filter(
+    selection
+).add_params(
+    select_year
+).transform_filter(
+    select_year
+)
+
+scatter.encoding.x.title = 'Average OPS (Batting)'
+scatter.encoding.y.title = 'Average ERA (Pitching)'
+dist1.encoding.x.title = 'On Base Percentage + Slugging Perentage (OPS)'
+dist2.encoding.x.title = 'Earned Run Average (ERA)'
+at.vconcat((scatter + avg), (dist1 + ops_avg), (dist2 + era_avg)).resolve_scale(color='independent').configure(background='#fff4d5').configure_axis(
+    labelFontSize=12,
+    titleFontSize=16
+).configure_legend(titleFontSize=16) 
+```
+
+Finally, after analyzing how player performance correlates with country of birth, it is important to note that there is significant variation in the birth locations of American players, as well. As we continue to focus on MLB demographics and the efficacy of teams casting a wide geographical net, we can gain insight on what factors impact a person's likelihood to make an MLB roster
+
+Thus, this section will delve into performance analysis of Major League Baseball players, focusing specifically on how their state of birth within the United States correlates with their performance in the league. Firstly, we will take a look at where the majority of at-bats and innings pitched come from, denoting which U.S. states have been more represented in MLB history.
+
+We will also use key performance metrics such as OPS for batters and  Earned ERA for pitchers, we investigate whether certain states produce higher-performing players and examine these trends through interactive visualizations. This analysis provides insights into regional development patterns of baseball talent and how geographic origin within the USA may influence a player's success in MLB.
+
+```{python}
+df = pd.read_csv('../data/cleaned/appearances.csv')
+
+# Convert 'AB', 'OPS', 'IPouts', and 'ERA' to numeric types, handling non-numeric values as NaN
+df['AB'] = pd.to_numeric(df['AB'], errors='coerce')
+df['OPS'] = pd.to_numeric(df['OPS'], errors='coerce')
+df['IPouts'] = pd.to_numeric(df['IPouts'], errors='coerce')
+df['ERA'] = pd.to_numeric(df['ERA'], errors='coerce')
+
+# Drop rows with missing values in 'AB', 'OPS', 'IPouts', and 'ERA' after coercion
+df.dropna(subset=['AB', 'OPS', 'IPouts', 'ERA'], inplace=True)
+
+# For batters: Calculate weighted OPS (sum of OPS * AB divided by total AB)
+weighted_ops = df.groupby('birth_country').apply(lambda x: (x['OPS'] * x['AB']).sum() / x['AB'].sum())
+
+# For pitchers: Calculate weighted ERA (sum of ERA * IPouts divided by total IPouts)
+weighted_era = df[df['G_p'] > 0].groupby('birth_country').apply(lambda x: (x['ERA'] * x['IPouts']).sum() / x['IPouts'].sum())
+
+# For batters: Sum total AB by birth_country
+total_ab_by_country = df.groupby('birth_country')['AB'].sum()
+
+# For pitchers: Sum total IPouts by birth_country
+total_ipouts_by_country = df[df['G_p'] > 0].groupby('birth_country')['IPouts'].sum()
+
+# Reseting of index to get DataFrame from Series
+weighted_ops = weighted_ops.reset_index(name='WeightedOPS')
+weighted_era = weighted_era.reset_index(name='WeightedERA')
+total_ab_by_country = total_ab_by_country.reset_index(name='TotalAB')
+total_ipouts_by_country = total_ipouts_by_country.reset_index(name='TotalIPouts')
+
+# Sort and output the weighted stats and totals for further use
+weighted_ops_sorted = weighted_ops.sort_values(by='WeightedOPS', ascending=False)
+weighted_era_sorted = weighted_era.sort_values(by='WeightedERA', ascending=True)
+total_ab_by_country_sorted = total_ab_by_country.sort_values(by='TotalAB', ascending=False)
+total_ipouts_by_country_sorted = total_ipouts_by_country.sort_values(by='TotalIPouts', ascending=False)
+```
+
+The following bar chart provides a visual breakdown of the total number of at-bats for players from various states in the USA.
+
+::: {.callout-tip}
+## How to Use
+
+* Identify and compare the states that have contributed the highest numbers of at-bats by players in the MLB.
+* Hover over the individual bars to reveal specific data points, including the state name and corresponding total at-bats.
+* Utilize the color coding to quickly assess relative activity, with darker colors signifying a greater number of at-bats.
+* States are organized in descending order, with those on the left contributing the most at-bats, making it easy to identify the leading states in player activity
+
+:::
+
+```{python}
+us_players = df[df['birth_country'] == 'USA']
+
+# Group by birth_state and calculate the sum of AB and IPouts
+us_ab_by_state = us_players.groupby('birth_state')['AB'].sum().reset_index()
+us_ipouts_by_state = us_players.groupby('birth_state')['IPouts'].sum().reset_index()
+
+# Sorting the results for consistent ordering
+us_ab_by_state = us_ab_by_state.sort_values(by='AB', ascending=False)
+us_ipouts_by_state = us_ipouts_by_state.sort_values(by='IPouts', ascending=False)
+
+# Interactive visualization of Total At Bats by Birth State for USA players
+fig_ab = px.bar(us_ab_by_state, x='birth_state', y='AB',
+                title='Total At Bats by Birth State for USA Players',
+                labels={'AB': 'Total At Bats', 'birth_state': 'Birth State'},
+                color='AB', 
+                color_continuous_scale=["#bfffaf", "#003c00"])  # Color scale
+fig_ab.update_layout(xaxis={'categoryorder': 'total descending'},
+     plot_bgcolor='#fff4d5',
+     paper_bgcolor='#fff4d5',
+    font=dict(
+        family="Droid Sans Mono, monospace"
+    ))
+```
+
+The visualization of 'Total Innings Pitched by Birth State for USA Players' depicts the cumulative pitching workload, as measured by innings pitched, attributable to players from different US birth states.
+
+::: {.callout-tip}
+## How to Use
+
+* Survey the distribution of innings pitched across the states, noting which ones have presented higher volumes of pitching in MLB.
+* Direct your cursor over bars to see precise data, such as the name of the state and the total innings pitched by players from that state.
+* Color intensity conveys the extent of innings pitched, with darker colors designating higher numbers.
+* The states are sorted by the total innings pitched in descending order, granting quick visibility to those states where players have spent more time on the mound. 
+
+:::
+
+```{python}
+us_ipouts_by_state['IP'] = us_ipouts_by_state['IPouts'] / 3
+fig_ipouts = px.bar(us_ipouts_by_state, x='birth_state', y='IP',
+                    title='Total Innings Pitched by Birth State for USA Players',
+                    labels={'IP': 'Total IP', 'birth_state': 'Birth State'},
+                    color='IP',
+                    color_continuous_scale=["#bfffaf", "#003c00"])
+fig_ipouts.update_layout(xaxis={'categoryorder': 'total descending'},
+     plot_bgcolor='#fff4d5',
+     paper_bgcolor='#fff4d5',
+    font=dict(
+        family="Droid Sans Mono, monospace"
+    ))
+```
+
+::: {.callout-tip}
+## How to Use
+
+Hover over the bars to see specific data points, including the birth state and its corresponding Weighted OPS score.
+The color gradient indicates the OPS performance level, with darker colors typically signifying higher OPS scores.
+Birth states are sorted by their Weighted OPS, showing how states compare in terms of player offensive performance for the selected year.
+
+* Adjust the year slider to view the data for the year you want to explore.
+* Move your cursor over the bars to see details.
+* The color coding signifies the average OPS, with darker shades typically representing a higher (better) OPS.
+* States are arranged by decreasing Weighted OPS, facilitating a comparison of which states' players excel in hitting for the chosen year.
+
+:::
+
+```{python}
+# Filter for players born in the USA
+usa_players = df[df['birth_country'] == 'USA']
+
+# For hitters: Group by birth_state and calculate the weighted OPS
+weighted_ops_usa = usa_players.groupby('birth_state').apply(
+    lambda x: (x['OPS'] * x['AB']).sum() / x['AB'].sum()).reset_index(name='WeightedOPS')
+
+# For pitchers: Group by birth_state and calculate the weighted ERA
+weighted_era_usa = usa_players[usa_players['G_p'] > 0].groupby('birth_state').apply(
+    lambda x: (x['ERA'] * x['IPouts']).sum() / x['IPouts'].sum()).reset_index(name='WeightedERA')
+
+# Sorting the results for better visualization
+weighted_ops_usa = weighted_ops_usa.sort_values(by='WeightedOPS', ascending=False)
+weighted_era_usa = weighted_era_usa.sort_values(by='WeightedERA', ascending=True)
+
+# Interactive visualization of Weighted OPS by Birth State for USA players
+fig_weighted_ops = px.bar(weighted_ops_usa, x='birth_state', y='WeightedOPS',
+                          title='Weighted OPS by Birth State for USA Players',
+                          labels={'WeightedOPS': 'Weighted OPS', 'birth_state': 'Birth State'},
+                          color='WeightedOPS', color_continuous_scale=["#bfffaf", "#003c00"])
+fig_weighted_ops.update_layout(xaxis={'categoryorder': 'total descending'},
+     plot_bgcolor='#fff4d5',
+     paper_bgcolor='#fff4d5',
+    font=dict(
+        family="Droid Sans Mono, monospace"
+    )
+)
+```
+
+The following chart provides insights into the pitching efficiency of players based on their birth states.
+
+::: {.callout-tip}
+## How to Use
+
+* Adjust the year slider to view the data for the year you want to explore.
+* Move your cursor over the bars to see details.
+* The color coding signifies ERA, with darker shades typically representing a lower (better) ERA.
+* States are arranged by increasing Weighted ERA, facilitating a comparison of which states' players excel in pitching for the chosen year.
+
+:::
+
+```{python}
+# Interactive visualization of Weighted ERA by Birth State for USA players
+fig_weighted_era = px.bar(weighted_era_usa, x='birth_state', y='WeightedERA',
+                          title='Weighted ERA by Birth State for USA Players',
+                          labels={'WeightedERA': 'Weighted ERA', 'birth_state': 'Birth State'},
+                          color='WeightedERA', color_continuous_scale=["#003c00","#bfffaf"])
+fig_weighted_era.update_layout(xaxis={'categoryorder': 'total ascending'},
+     plot_bgcolor='#fff4d5',
+     paper_bgcolor='#fff4d5',
+    font=dict(
+        family="Droid Sans Mono, monospace"
+    ))
+```
+
+From these charts, we can see that much of the meaningful variation in ERA and OPS are generally due to states with smaller sample sizes. The extreme ends for both statistics are represented largely by states that have fewer cumulative innings pitched an at-bats, as we would expect. However, we can see from the cumulative bar charts what makes a state have more MLB players. As we would expect, the more populous states represent the majority of the highest ranking states, but they are generally followed by southern, warm-weather states. As an outdoor sport, it stands to reason that people born in southern states are more likely to reach MLB status, a hypothesis that is backed up here.
+
+## Conclusion
+
+Ultimately, the greater presence of international MLB players signifies an important growth of the sport as a worldwide phenomenon. Recognition of stardom from players born outside the U.S. has led to an emergence of globally-watched international competitions such as the World Baseball Classic, and a cultural shift where baseball games are diverse events for all to enjoy. The findings in this report give us insight into how this shift occurred. Several factors such as MLB's relationship with a country's league, teams starting youth academies, political and economic changes, and baseball's cultural significance in a country all contribute to MLB's player base.
+
+For the future, there is no reason to think MLB's demographics won't continue to shift. While there have been several plateaus for many of the most represented international countries, the growth of MLB's worldwide reach means baseball will continue to have cultural impacts across all continents. MLB teams should continue to scout and acquire international players, as it is clear that baseball talent is flourishing outside of U.S. borders.
+
+## References
+
+[Data Source](http://seanlahman.com/)
+
+[^1]: Ohtani contract: State controller calls for congressional intervention on Dodger star’s deferrals. (2024, January 10). ABC7 Los Angeles. https://abc7.com/shohei-ohtani-taxes-california-deferrals/14300963/#:~:text=The%20Dodgers%20signed%20Ohtani%20to,the%20contract%20expires%20in%202033.
+
+[^2]: Brown, M. (2023, March 27). From Record-Breaking television, attendance and merchandise sales, 2023 World Baseball Classic was a home run. Forbes. https://www.forbes.com/sites/maurybrown/2023/03/23/from-record-breaking-television-attendance-and-merchandise-sales-2023-world-baseball-classic-was-a-home-run/?sh=4f6ceede28e3 
+
+[^3]: Hickey, K. (2024, April 4). Yankees’ Juan Soto record contract in free agency starting at $500M? Sporting News. https://www.sportingnews.com/us/mlb/news/new-york-yankees-juan-soto-record-contract-mlb-free-agency-starting-500-million/cfe07dafd143c9d5e3bfe3a7
+
+[^4]: Mullin, E. (2023, March 11). Fans of Puerto Rico’s WBC team set hair-related world record. NBC Sports Chicago. https://www.nbcsportschicago.com/mlb/chicago-cubs/fans-of-puerto-ricos-wbc-team-set-hair-related-world-record/346871/ 
+
+[^5]: A guide to Venezuela’s baseball history. (n.d.). MLB.com. https://www.mlb.com/news/featured/venezuela-baseball-history Admin. (2023, March 20).
+
+[^6]: Canada’s first professional baseball league. https://sabr.org/journal/article/canadas-first-professional-baseball-league/#:~:text=Organized%20baseball%20in%20Canada%20began,Delaware%20clubs%20from%20London%2C%20Ontario.
+
+[^7]: Baseball Almanac, Inc. (n.d.). Washington Nationals History and Montreal Expos History | Baseball Almanac. https://www.baseball-almanac.com/teams/washington_nationals.shtml
+
+[^8]: Canada baseball history. (n.d.). MLB.com. https://www.mlb.com/news/featured/canada-baseball-history
+
+[^9]: CFR.org Editors. (2017, June 20). U.S.-Cuba Relations. Council on Foreign Relations. https://www.cfr.org/timeline/us-cuba-relations 
+
+[^10]: Gonzalez, L. F. (2018, January 29). INSTA-ANALYSIS: PUERTO RICO & THE MLB DRAFT (1989-2017). 643 Sports MGMT Baseball Recruiting. https://www.643sportsmgmt.com/uncategorized/insta-analysis-puerto-rico-the-mlb-%E2%9A%BE%EF%B8%8F-draft-1989-2017/ 
+
+[^11]: Jamail, M. (2003, November 26). Cuban League | Baseball, history, teams & players. Encyclopedia Britannica. https://www.britannica.com/topic/Cuban-League
+
+[^12]: Ocariz, P. (2022, November 29). The new business of baseball in Venezuela. https://coopersquared.com/2022/11/29/the-new-business-of-baseball-in-venezuela/
+
+[^13]: Otis/GuacaraVenezuela, J. (2016, March 24). Baseball’s Venezuelan talent pool dries up amid poverty and discord. TIME. https://time.com/4270487/baseball-venezuela/
+
+[^14]: Sabr. (2022, October 22). Early history of baseball in the Dominican Republic. https://sabr.org/research/article/early-history-of-baseball-in-the-dominican-republic/
+
+[^15]: The Editors of Encyclopaedia Britannica. (2011, September 28). Caribbean Series Champions | Baseball, Latin America, Championships. Encyclopedia Britannica. https://www.britannica.com/topic/Caribbean-Series-Champions-1787115
+
+[^16]: The evolution of the United States – Japanese Player Contract Agreement | Sports Litigation alert. (n.d.). https://sportslitigationalert.com/the-evolution-of-the-united-states-japanese-player-contract-agreement/
+
+[^17]: The history of baseball in Puerto Rico. (n.d.). MLB.com. https://www.mlb.com/news/featured/the-history-of-baseball-in-puerto-rico 
+
+[^18]: The history of baseball in the Dominican Republic. (n.d.). MLB.com. https://www.mlb.com/news/featured/the-history-of-baseball-in-the-dominican-republic

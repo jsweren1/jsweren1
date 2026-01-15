@@ -1,0 +1,48 @@
+project:
+  type: website
+
+website:
+  sidebar:
+    background: "#355464"
+    foreground: "#99D9D9"
+    search: true
+    title: "DSAN-5600 Project: Topic TBD"
+    subtitle: "text"
+    contents:
+      - text: "Name: Josh Sweren"
+      - text: "GU Net ID: jms819"
+      - text: "---------"
+      - href: https://www.linkedin.com/in/joshua-sweren-26599a15b/
+        text: LinkedIn
+      - text: "----------"
+      - href: index.qmd
+        text: About Me
+      - href: introduction/introduction.html
+        text: Introduction
+      - href: data_sources/data_sources.html
+        text: Data Sources
+      - href: data_visualization/data_visualization.html
+        text: Data Visualization
+      - href: exploratory_data_analysis/exploratory_data_analysis.html
+        text: Exploratory Data Analysis
+      - href: univariate_ts_models/univariate_ts_models.html
+        text: Univariate TS Models (ARIMA/SARIMA)
+      - href: multivariate_ts_models/multivariate_ts_models.html
+        text: Multivariate TS Models (ARIMAX/SARIMAX/VAR)
+      - href: financial_ts_models/financial_ts_models.html
+        text: Financial Time Series Models (ARCH/GARCH)
+      - href: deep_learning_ts/deep_learning_ts.html
+        text: Deep Learning for TS
+      - href: other/other.html
+        text: Other (Interrupted TS/ARFIMA/ Spectral Analysis)
+      - href: conclusions/conclusions.html
+        text: Conclusions
+format:
+  html:
+    theme: 
+      - united
+      - styles.scss
+    toc: true
+
+
+

@@ -1,0 +1,35 @@
+/* Customize navbar background color */
+.navbar, .navbar-header {
+    background-color: #043d18 !important; /* Set navbar background to your desired color */
+}
+
+/* Change navbar link text color to white */
+.navbar .navbar-brand, .navbar .navbar-nav li a {
+    color: #ffffff !important;
+}
+
+/* Change the text color of tab buttons */
+.navbar .navbar-nav li a {
+    color: #c6fada !important; /* White text color */
+}
+
+/* Change hover color for navbar links */
+.navbar .navbar-nav li a:hover {
+    color: #ffffff !important; /* Light green color on hover */
+}
+
+/* Style tab buttons */
+.btn-outline-success {
+    color: #ffffff;
+    border-color: #ffffff;
+}
+
+/* Change the color of background */
+body {
+    background-color: #f0f0f0 !important; /* Light grey background */
+}
+
+/* paragrapah spacing */
+p {
+    text-align: justify;
+}

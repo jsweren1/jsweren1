@@ -1,0 +1,38 @@
+---
+title: "Josh Sweren"
+---
+
+<html>
+<body>
+
+
+<p style="font-size:16px;"> Josh Sweren is a graduate student in the Data Science and Analytics program at Georgetown University. He received his B.S. in Statistics with minors in Computer Science and Mathematics from the George Washington University in 2020. Since graduating, he has remained in the Washington, D.C. area, and has worked in government consulting for over three years. He currently works as a Business Analyst for an IT contractor, serving under a contract with the United States Department of Agriculture. Originally from New York, Mr. Sweren is eager to learn about Machine Learning and Deep Learning, as well as the broader topics of data visualization and communication. Outside of work, he enjoys playing and watching sports, as well as doing puzzles. </p>
+
+<!-- USE A TABLE TO ORGANIZE/FORMAT THE WEBPAGE -->
+<table>
+    <!--TABLE ROW-1-->
+   <tbody><tr>
+      <!--ROW-1 COL-1-->
+      <td>
+            <img src="../images/headshot.png" width="333" height="500">
+      </td>
+      <!--ROW-1 COL-2-->
+      <td>
+        <h2 style="text-align:left; color:#355464;">&nbsp;&nbsp;Current Coursework</h2>  
+        <ul style="text-align:left; color:#001628; line-height: 1;">
+            <li> DSAN 5500: Data Structures, Objects, and Algorithms </li><br>
+            <li> DSAN 5600: Applied Time Series for Data Science </li><br>
+        </ul>
+        <h2 style="text-align:left; color:#355464;">&nbsp;&nbsp; Prior Coursework</h2>
+        <ul style="text-align:left; color:#001628; line-height: 1;">
+            <li> DSAN 5000: Data Science and Analytics </li><br>
+            <li> DSAN 5100: Probabilistic Modeling and Statistical Computing </li><br>
+            <li> DSAN 5200: Advanced Data Visualization </li><br>
+            <li> DSAN 5300: Statistical Learning </li> <br>
+            <li> DSAN 6000: Big Data and Cloud Computing </li><br>
+            <li> DSAN 6600: Neural Nets and Deep Learning </li><br> 
+        </ul>
+      </td>
+   </tr> 
+</tbody></table>
+</body></html>
